@@ -1,0 +1,15 @@
+from Cov_Func_v2 import Cov_Func_v2
+from Life_time import Life_Time
+from Graph import Graph
+
+def CostFunction_weighted(pop, stat, w, Obstacle_Area, Covered_Area):
+    rs = stat[0,:]
+    rc = stat[1,0]
+    G = Graph(pop,rc)
+    
+    Coverage, _ = Cov_Func_v2(pop, rs, Obstacle_Area, Covered_Area)
+    LifeTime = Life_Time(G)
+    
+    Cost = w[0] * Coverage + w[1] * LifeTime
+    
+    return Cost
