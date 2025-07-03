@@ -1,3 +1,4 @@
+globals().clear()
 import numpy as np
 import matplotlib.pyplot as plt
 # from scipy.io import savemat
@@ -6,7 +7,7 @@ import matplotlib.pyplot as plt
 from CostFunction_weighted import CostFunction_weighted
 from Graph import Graph
 from Connectivity_graph import Connectivity_graph
-
+from Cov_Func_v2 import Cov_Func_v2
 
 # %% ------------------------- PARAMETERS --------------------------
 np.random.seed(0)
@@ -15,7 +16,7 @@ MaxIt = 200
 nPop = 25
 N = 60
 
-rc = 20
+rc = 10
 rs = np.ones(N, dtype=int) * 10
 #rs = np.random.uniform(10, 15, N)
 stat = np.zeros((2, N))  # tạo mảng 2xN
@@ -96,7 +97,7 @@ for it in range(MaxIt):
 plt.clf()
 plt.grid(True)
 G = Graph(BestSol['Position'],rc)
-
+cov, Covered_Area= Cov_Func_v2(BestSol['Position'], rs, Obstacle_Area, Covered_Area)
 # Hiển thị map
 #obs_row, obs_col = np.where(Obstacle_Area == 1)
 #plt.plot(obs_col, obs_row, '.', markersize=0.1, color='blue')  # MATLAB plot(row,col) → Python plot(x=col,y=row)
@@ -105,7 +106,7 @@ G = Graph(BestSol['Position'],rc)
 #discovered_obs_row, discovered_obs_col = np.where(Covered_Area == -1)
 #plt.plot(discovered_obs_col, discovered_obs_row, '.', markersize=5, color='red')
 discovered_row, discovered_col = np.where(Covered_Area == 1)
-plt.plot(discovered_col, discovered_row, '.', markersize=5, color='green')
+plt.plot(discovered_col, discovered_row, '.', markersize=1, color='green')
 
 # vẽ cảm biến
 theta = np.linspace(0, 2*np.pi, 500)
@@ -130,9 +131,10 @@ plt.xlim([0, Obstacle_Area.shape[1]])
 plt.ylim([0, Obstacle_Area.shape[0]])
 
 # Tiêu đề
-plt.title(f"{BestSol['Cost']*100:.2f}%  at time step: {it}")
+plt.title(f"{(1-cov)*100:.2f}%  at time step: {it}")
 
-plt.gca().invert_yaxis()  # để trục y giống MATLAB (gốc ở trên)
+#plt.gca().invert_yaxis()  # để trục y giống MATLAB (gốc ở trên)
+plt.gca()
 plt.draw()
 plt.pause(0.001)  # giống drawnow trong MATLAB
 

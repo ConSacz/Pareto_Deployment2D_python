@@ -50,7 +50,7 @@ def get_pareto_front(non_dom_pop):
     return pareto_front
 
 # %% NON DOMINATED SORTING
-def NonDominatedSorting(pop):
+def NS_Sort(pop):
     nPop = len(pop)
 
     for i in range(nPop):
@@ -64,10 +64,10 @@ def NonDominatedSorting(pop):
             p = pop[i]
             q = pop[j]
 
-            if check_domination(p, q) == 1:
+            if check_domination(p['Cost'], q['Cost']) == 1:
                 p['DominationSet'].append(j)
                 q['DominatedCount'] += 1
-            elif check_domination(q, p) == 1:
+            elif check_domination(q['Cost'], p['Cost']) == 1:
                 q['DominationSet'].append(i)
                 p['DominatedCount'] += 1
 
@@ -97,8 +97,9 @@ def NonDominatedSorting(pop):
 
     return pop, F
 
+
+def CD_calc(pop, F):
 # %% CROWDING DISTANCE CALCULATING
-def CalcCrowdingDistance(pop, F):
     nF = len(F)
 
     for k in range(nF):
@@ -108,13 +109,13 @@ def CalcCrowdingDistance(pop, F):
             continue
 
         # Lấy tất cả Cost của các cá thể trong front
-        Costs = np.array([pop[i]['Cost'] for i in front]).T  # shape: (nObj, n)
+        Costs = np.array([pop[i]['Cost'].flatten() for i in front]).T  # shape: (nObj, n)
 
         nObj = Costs.shape[0]
         d = np.zeros((n, nObj))
 
         for j in range(nObj):
-            cj = Costs[j]
+            cj = Costs[j]  # all costs of j Obj
             so = np.argsort(cj)
             d[so[0], j] = np.inf
             d[so[-1], j] = np.inf
@@ -129,5 +130,23 @@ def CalcCrowdingDistance(pop, F):
         # Gán tổng khoảng cách cho từng cá thể trong front
         for i in range(n):
             pop[front[i]]['CrowdingDistance'] = np.sum(d[i])
-
+# %%
     return pop
+
+def sort_pop(pop):
+    # %% Sort based on CrowdingDistance (giảm dần)
+    pop.sort(key=lambda p: p['CrowdingDistance'], reverse=True)
+
+    # Sort based on Rank (tăng dần)
+    pop.sort(key=lambda p: p['Rank'])
+
+    # Update Fronts
+    ranks = [p['Rank'] for p in pop]
+    max_rank = max(ranks)
+    F = []
+
+    for r in range(1, max_rank + 1):
+        front = [i for i, rank in enumerate(ranks) if rank == r]
+        F.append(front)
+
+    return pop, F

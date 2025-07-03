@@ -1,4 +1,9 @@
-
+try:
+    from IPython import get_ipython
+    get_ipython().run_line_magic('reset', '-f')
+except:
+    pass
+# %%
 import numpy as np
 import matplotlib.pyplot as plt
 # from scipy.io import savemat
@@ -7,17 +12,17 @@ import matplotlib.pyplot as plt
 from CostFunction_MOO import CostFunction_MOO
 from Graph import Graph
 from Connectivity_graph import Connectivity_graph
-from Domination_functions import check_domination, get_pareto_front
+from Domination_functions import check_domination, get_pareto_front, NS_Sort, CD_calc, sort_pop
 
 
 # %% ------------------------- PARAMETERS --------------------------
 np.random.seed(0)
 size = 100
 MaxIt = 200
-nPop = 25
+nPop = 50
 N = 60
 
-rc = 20
+rc = 30
 rs = np.ones(N, dtype=int) * 10
 #rs = np.random.uniform(10, 15, N)
 stat = np.zeros((2, N))  # tạo mảng 2xN
@@ -40,7 +45,7 @@ for _ in range(nPop):
     cov = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
     pop.append({'Position': alpop, 'Cost': cov})
 
-Extra_archive = get_pareto_front(pop)
+Extra_archive = []
         
 # %% ------------------------- MAIN LOOP --------------------------
 for it in range(MaxIt):
@@ -56,12 +61,12 @@ for it in range(MaxIt):
             if check_domination(alpop_cost, pop[i]['Cost']) == 1:
                 pop[i]['Position'] = alpop
                 pop[i]['Cost'] = alpop_cost
-            elif check_domination(alpop_cost, pop[i]['Cost']) == -1:
+            elif check_domination(alpop_cost, pop[i]['Cost']) == 0:
+                Extra_archive.append({'Position': alpop, 'Cost': alpop_cost})
+            else:
                 L[i] += 1
                 continue
-            else:
-                Extra_archive.append({'Position': alpop, 'Cost': alpop_cost})
-                Extra_archive = get_pareto_front(Extra_archive)
+            
 # %% ------------------------- SELECTION LOOP --------------------------
     w = np.array([0.5, 0.5])
     E = np.array([np.sum(p['Cost'].flatten() * w) for p in pop])
@@ -86,35 +91,45 @@ for it in range(MaxIt):
                     pop[i]['Position'] = alpop
                     pop[i]['Cost'] = alpop_cost
                     break
-                elif check_domination(alpop_cost, pop[i]['Cost']) == -1:
-                    continue
-                else:
+                elif check_domination(alpop_cost, pop[i]['Cost']) == 0:
                     Extra_archive.append({'Position': alpop, 'Cost': alpop_cost})
-                    Extra_archive = get_pareto_front(Extra_archive)
                     break
+                else:
+                    L[i] += 1
+                    continue
 
-    k = np.random.choice(np.arange(0, nPop-1), size=len(Extra_archive), replace=False)
-    for i in sorted(k, reverse=True):
-        del pop[i]
     pop = pop + Extra_archive
-    print(f"Iter={it}, PF = {len(Extra_archive):.4f}")
+    pop, F = NS_Sort(pop)
+    pop = CD_calc(pop, F)
+    pop, F = sort_pop(pop)
+    pop = pop[:nPop]
+    
+    Extra_archive = []
+    
+    print(f"Iter={it}, {len(get_pareto_front(pop)):.4f} non-dominated solutions")
 
     
 # %% ------------------------- PLOT --------------------------
 # Tạo mảng data từ Cost của Extra_archive
-    data = np.array([ind['Cost'] for ind in Extra_archive])  # mỗi ind là dict có key 'Cost'
-    data_set = np.array([ind['Cost'] for ind in pop])
-    
-    # Tạo figure 3D
+    data = np.array([ind['Cost'].flatten() for ind in get_pareto_front(pop)])  # mỗi ind là dict có key 'Cost'
+    data_set = np.array([ind['Cost'].flatten() for ind in pop])
+
+    # Tạo figure
     fig = plt.figure(1)
     plt.clf()
     
     # Vẽ Pareto front
-    plt.plot(data_set[:, 0], data_set[:, 1], 'o', color='g')
-    plt.plot(data[:, 0], data[:, 1], 'o', color='r')
-    
+    #plt.plot(data_set[:, 0], data_set[:, 1], 'o', color='g')
+    plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'NSGA')
+    #plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSABC2')
+    plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSABC3')
+    #plt.text(data[:, 0], data[:, 1], range(0,len(Extra_archive)), fontsize=15, color='red')
+    plt.legend()
     plt.xlabel('Non-coverage')
     plt.ylabel('Energy')
-    
+    None
     # Cập nhật đồ thị theo từng iteration
     plt.pause(0.01)
+
+# %% ------------------------- DELETE --------------------------    
+del alpop, alpop_cost, cov, data, data_set, E, E_ave, h, i, k, phi, size
