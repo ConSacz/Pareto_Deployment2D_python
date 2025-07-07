@@ -49,12 +49,12 @@ for _ in range(nPop):
         
 # %% ------------------------- MAIN LOOP --------------------------
 for it in range(MaxIt):
+    # %% ------------------------- EXPLORATION LOOP --------------------------
     for i in range(nPop):
         k = np.random.randint(nPop)
         phi = a * np.random.uniform(-1, 1, (N, 2)) * (1 - L[i] / MaxIt)**5
         alpop = pop[i]['Position'] + phi * (pop[i]['Position'] - pop[k]['Position'])
         alpop[:, :2] = np.clip(alpop[:, :2], 0, size - 1)
-        alpop[0,:] = sink
 
         if Connectivity_graph(Graph(alpop[:, :2], rc),[]):
             new_cost= CostFunction_weighted(alpop, stat, w, Obstacle_Area, Covered_Area.copy())
@@ -64,13 +64,13 @@ for it in range(MaxIt):
             else:
                 L[i] += 1
             break
-
+    # %% ------------------------- SELECTION LOOP --------------------------
     E = np.array([p['Cost'] for p in pop])
     if np.sum(E) == 0:
         E_ave = np.ones_like(E) / nPop
     else:
         E_ave = E / np.sum(E)
-
+    # %% ------------------------- EXPLOITATION LOOP --------------------------    
     for _ in range(nPop):
         i = np.random.choice(nPop, p=E_ave)
         for k in range(N):
@@ -85,15 +85,14 @@ for it in range(MaxIt):
                 if new_cost <= pop[i]['Cost']:
                     pop[i]['Position'] = alpop
                     pop[i]['Cost'] = new_cost
-
+    
+    # %% ------------------------- EXHAUST DEPLETE LOOP --------------------------
     for i in range(nPop):
         if pop[i]['Cost'] < BestSol['Cost']:
             BestSol = {'Position': pop[i]['Position'].copy(), 'Cost': pop[i]['Cost']}
 
     BestCost.append(BestSol['Cost'])
     print(f"Iter={it}, Best Cost = {BestSol['Cost']:.4f}")
-    if BestSol['Cost'] == 1:
-        break
     
 # %% ------------------------- PLOT --------------------------
 plt.clf()

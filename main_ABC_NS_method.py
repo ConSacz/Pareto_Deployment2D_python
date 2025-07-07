@@ -16,13 +16,13 @@ from Domination_functions import check_domination, get_pareto_front, NS_Sort, CD
 
 
 # %% ------------------------- PARAMETERS --------------------------
-np.random.seed(0)
+#np.random.seed(0)
 size = 100
 MaxIt = 200
 nPop = 50
 N = 60
 
-rc = 30
+rc = 10
 rs = np.ones(N, dtype=int) * 10
 #rs = np.random.uniform(10, 15, N)
 stat = np.zeros((2, N))  # tạo mảng 2xN
@@ -40,7 +40,7 @@ L = np.zeros(nPop, dtype=int)
 
 pop = []
 for _ in range(nPop):
-    alpop = np.random.uniform(sink[0]-rc/2, sink[1]+rc/2, (N, 2))
+    alpop = np.random.uniform(sink[0]-rc/2, sink[1]+rc/2, (N, 2)) 
     alpop[0] = sink
     cov = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
     pop.append({'Position': alpop, 'Cost': cov})
@@ -55,6 +55,7 @@ for it in range(MaxIt):
         phi = a * np.random.uniform(-1, 1, (N, 2)) * (1 - L[i] / MaxIt)**5
         alpop = pop[i]['Position'] + phi * (pop[i]['Position'] - pop[k]['Position'])
         alpop[:, :2] = np.clip(alpop[:, :2], 0, size - 1)
+        alpop[0,:] = sink
 
         if Connectivity_graph(Graph(alpop[:, :2], rc),[]):
             alpop_cost = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
@@ -84,6 +85,7 @@ for it in range(MaxIt):
             phi = a * np.random.uniform(-1, 1, (1, 2)) * (1 - L[i] / MaxIt)**2
             alpop[k] += phi.flatten() * (pop[i]['Position'][k] - pop[i]['Position'][h])
             alpop[:, :2] = np.clip(alpop[:, :2], 0, size - 1)
+            alpop[0,:] = sink
 
             if Connectivity_graph(Graph(alpop[:, :2], rc),[]):
                 alpop_cost = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
@@ -120,9 +122,9 @@ for it in range(MaxIt):
     
     # Vẽ Pareto front
     #plt.plot(data_set[:, 0], data_set[:, 1], 'o', color='g')
-    plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'NSGA')
-    #plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSABC2')
-    plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSABC3')
+    plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'PF')
+    plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSABC2')
+    #plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSABC3')
     #plt.text(data[:, 0], data[:, 1], range(0,len(Extra_archive)), fontsize=15, color='red')
     plt.legend()
     plt.xlabel('Non-coverage')
@@ -132,4 +134,4 @@ for it in range(MaxIt):
     plt.pause(0.01)
 
 # %% ------------------------- DELETE --------------------------    
-del alpop, alpop_cost, cov, data, data_set, E, E_ave, h, i, k, phi, size
+del alpop, alpop_cost, cov, E, E_ave, h, i, k, phi, size
