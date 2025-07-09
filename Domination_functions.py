@@ -1,5 +1,16 @@
 import numpy as np
 
+# %% WEIGHTED SELECTION
+def weighted_selection(f1,f2,w):
+    f1 = np.array(f1)
+    f2 = np.array(f2)
+    ff1 = np.sum(f1*w)
+    ff2 = np.sum(f2*w)
+    if ff1 < ff2:
+        return 1
+    else:
+        return 0
+    
 # %% CHECK DOMINATION
 def check_domination(f1, f2):
     """

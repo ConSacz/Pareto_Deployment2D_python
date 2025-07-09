@@ -122,11 +122,11 @@ for it in range(MaxIt):
     
     # Vẽ Pareto front
     #plt.plot(data_set[:, 0], data_set[:, 1], 'o', color='g')
-    plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'PF')
+    #plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'PF')
     plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSABC2')
     #plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSABC3')
     #plt.text(data[:, 0], data[:, 1], range(0,len(Extra_archive)), fontsize=15, color='red')
-    plt.legend()
+    #plt.legend()
     plt.xlabel('Non-coverage')
     plt.ylabel('Energy')
     None

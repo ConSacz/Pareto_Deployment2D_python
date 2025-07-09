@@ -43,6 +43,6 @@ def Life_Time(G):
         lifetime = maxBat / np.max(Bat)
 
     # Normalize (same logic as MATLAB version)
-    lifetime_normalized = round(1 / lifetime, 3) if lifetime != 0 else 0
+    lifetime_normalized = round(1 / lifetime, 5) if lifetime != 0 else 0
 
     return lifetime_normalized
