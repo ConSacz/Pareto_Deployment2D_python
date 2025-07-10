@@ -1,5 +1,5 @@
 import numpy as np
-from Domination_functions import get_pareto_front
+#from Domination_functions import get_pareto_front
 
 def normalized(data):
     x_sta = np.min(data, axis = 0)
@@ -9,7 +9,7 @@ def normalized(data):
     return data_normalized
 
 def weight_assign(pop,RP):
-    pop.sort(key=lambda p: p['Cost'][1])
+    pop.sort(key=lambda p: p['Cost'][0], reverse=True)
     x_sta = RP[:,0].flatten()
     x_nad = RP[:,1].flatten()
     Npop = len(pop)
@@ -23,11 +23,11 @@ def weight_assign(pop,RP):
     
     # indices = np.array([i // (Npop//NPF+1) for i in range(Npop)])
     # w = data_normalized[indices]
-    weights = np.linspace(x_sta,x_nad,10)
+    weights = np.linspace(x_sta,x_nad,Npop)
     weights[:, 1] = weights[::-1, 1]
     weights[:, [0, 1]] = weights[:, [1, 0]]
-    indices = np.array([i // (5) for i in range(Npop)])
-    w = weights[indices]
+    #indices = np.array([i // (5) for i in range(Npop)])
+    w = weights
     
     return pop, w
     
