@@ -55,6 +55,7 @@ Extra_archive = []
 for it in range(MaxIt):
     pop, w = weight_assign(pop,RP)
 # %% ------------------------- EXPLORATION LOOP --------------------------
+    print("Exploration starts")
     for i in range(nPop):
         k = np.random.randint(nPop)
         phi = a * np.random.uniform(-1, 1, (N, 2)) * (1 - L[i] / MaxIt)**5
@@ -71,9 +72,10 @@ for it in range(MaxIt):
                 pop[i]['Cost'] = alpop_cost 
             else:
                 L[i] += 1
-                continue
-        
+                #continue
+       
 # %% ------------------------- EXPLOITATION LOOP --------------------------
+    print("Exploitation starts")    
     for i in range(nPop):
         for k in range(N):
             alpop = pop[i]['Position'].copy()
@@ -91,7 +93,8 @@ for it in range(MaxIt):
                     pop[i]['Position'] = alpop
                     pop[i]['Cost'] = alpop_cost
                     break
-    
+        print(f"Exploration changing of pop {i}, node {k} ")
+        
     print(f"Iter={it}, {len(get_pareto_front(pop))} non-dominated solutions")
 
     
@@ -109,13 +112,15 @@ for it in range(MaxIt):
     plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'PF')
     #plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSABC2')
     #plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSWABC')
-    #plt.text(data[:, 0], data[:, 1], range(0,len(Extra_archive)), fontsize=15, color='red')
+    for i in range(len(data_set)):
+        x, y = data_set[i]
+        plt.text(x, y, str(i), fontsize=8, ha='right', va='bottom', color='blue')
     #plt.legend()
     plt.xlabel('Non-coverage')
     plt.ylabel('Energy')
     None
     # Cập nhật đồ thị theo từng iteration
-    plt.pause(0.01)
+    plt.pause(0.001)
 
 # %% ------------------------- DELETE --------------------------    
 del alpop, alpop_cost, h, i, k, phi, size

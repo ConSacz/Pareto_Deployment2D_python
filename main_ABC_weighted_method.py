@@ -23,7 +23,7 @@ rs = np.ones(N, dtype=int) * 10
 stat = np.zeros((2, N))  # tạo mảng 2xN
 stat[0, :] = rs          # dòng 1 là rs
 stat[1, 0] = rc          # phần tử đầu dòng 2 = rc
-w = np.array([0.5, 0.5])
+w = np.array([1, 0])
 
 # %% ------------------------- INITIATION --------------------------
 Covered_Area = np.zeros((size, size), dtype=int)
