@@ -14,10 +14,10 @@ def Life_Time(G):
     # Parameters
     b = 0.1   # nJ/bit/m^a
     a = 2     # path loss exponent
-    EM = 13   # nJ/bit maintain/process
+    EM = 0    # nJ/bit maintain/process
     ET = 20   # nJ/bit transmit
     ER = 2    # nJ/bit receive
-    maxBat = 10000
+    maxBat = 1000
     # %%
     Bat = np.zeros(N)
 

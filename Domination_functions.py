@@ -1,11 +1,15 @@
 import numpy as np
 
 # %% WEIGHTED SELECTION
-def weighted_selection(f1,f2,w):
+def weighted_selection(f1,f2,w,RP):
+    x_sta = RP[:,0].flatten()
+    x_nad = RP[:,1].flatten()
     f1 = np.array(f1.flatten())
     f2 = np.array(f2.flatten())
-    ff1 = np.sum(f1*w)
-    ff2 = np.sum(f2*w)
+    f1_nmlized = (f1 - x_sta) / (x_nad - x_sta)
+    f2_nmlized = (f2 - x_sta) / (x_nad - x_sta)
+    ff1 = np.sum(f1_nmlized*w)
+    ff2 = np.sum(f2_nmlized*w)
     if ff1 < ff2:
         return 1
     else:
