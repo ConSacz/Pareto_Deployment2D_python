@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 # from scipy.io import savemat
 # from scipy.spatial.distance import cdist
 # import os
-from CostFunction_weighted import CostFunction_weighted
-from Graph import Graph
-from Connectivity_graph import Connectivity_graph
-from Cov_Func_v2 import Cov_Func_v2
+from utils.Multi_objective_functions import CostFunction_weighted
+from utils.Graph_functions import Graph, Connectivity_graph
+from utils.Single_objective_functions import Cov_Func
 
 # %% ------------------------- PARAMETERS --------------------------
 np.random.seed(0)
@@ -99,7 +98,7 @@ for it in range(MaxIt):
 plt.clf()
 plt.grid(True)
 G = Graph(BestSol['Position'],rc)
-cov, Covered_Area= Cov_Func_v2(BestSol['Position'], rs, Obstacle_Area, Covered_Area)
+cov, Covered_Area= Cov_Func(BestSol['Position'], rs, Obstacle_Area, Covered_Area)
 # Hiển thị map
 #obs_row, obs_col = np.where(Obstacle_Area == 1)
 #plt.plot(obs_col, obs_row, '.', markersize=0.1, color='blue')  # MATLAB plot(row,col) → Python plot(x=col,y=row)
@@ -118,7 +117,7 @@ for i in range(N):
 
     x = BestSol['Position'][i, 1] + rs[i] * np.cos(theta)
     y = BestSol['Position'][i, 0] + rs[i] * np.sin(theta)
-    plt.fill(x, y, color=(0.6, 1, 0.6), alpha=0.2, edgecolor='k')
+    plt.fill(x, y, color=(0.6, 1, 0.6), alpha=0.7, edgecolor='k')
 
 # vẽ kết nối
 for edge in G.edges():

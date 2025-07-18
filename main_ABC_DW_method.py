@@ -6,10 +6,13 @@ except:
 # %%
 import numpy as np
 import matplotlib.pyplot as plt
-
+# from scipy.io import savemat
+# from scipy.spatial.distance import cdist
+# import os
 from utils.Multi_objective_functions import CostFunction_MOO
 from utils.Graph_functions import Graph, Connectivity_graph
-from utils.Domination_functions import check_domination, get_pareto_front, NS_Sort, CD_calc, sort_pop
+from utils.Domination_functions import get_pareto_front, weighted_selection
+from utils.Decompose_functions import weight_assign
 from utils.Workspace_functions import save_mat
 
 
@@ -27,6 +30,8 @@ for Trial in range(10):
     stat = np.zeros((2, N))  # tạo mảng 2xN
     stat[0, :] = rs          # dòng 1 là rs
     stat[1, 0] = rc          # phần tử đầu dòng 2 = rc
+    RP = np.zeros((2, 2))   # dòng 1 là nadỉ value
+    RP[:,0] = [1, 1]        # dòng 2 là ideal value
     
     # %% ------------------------- INITIATION --------------------------
     Covered_Area = np.zeros((size, size), dtype=int)
@@ -41,14 +46,16 @@ for Trial in range(10):
     for _ in range(nPop):
         alpop = np.random.uniform(sink[0]-rc/2, sink[1]+rc/2, (N, 2)) 
         alpop[0] = sink
-        cov = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
-        pop.append({'Position': alpop, 'Cost': cov})
-    
-    Extra_archive = []
+        alpop_cost = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
+        pop.append({'Position': alpop, 'Cost': alpop_cost})
+        RP[:,0] = np.minimum(RP[:,0], alpop_cost[:,0])
+        RP[:,1] = np.maximum(RP[:,1], alpop_cost[:,0])
             
     # %% ------------------------- MAIN LOOP --------------------------
     for it in range(MaxIt):
+        pop, w = weight_assign(pop,RP)
     # %% ------------------------- EXPLORATION LOOP --------------------------
+        #print("Exploration starts")
         for i in range(nPop):
             k = np.random.randint(nPop)
             phi = a * np.random.uniform(-1, 1, (N, 2)) * (1 - L[i] / MaxIt)**5
@@ -58,27 +65,22 @@ for Trial in range(10):
     
             if Connectivity_graph(Graph(alpop[:, :2], rc),[]):
                 alpop_cost = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
-                if check_domination(alpop_cost, pop[i]['Cost']) == 1:
+                RP[:,0] = np.minimum(RP[:,0], alpop_cost[:,0])
+                RP[:,1] = np.maximum(RP[:,1], alpop_cost[:,0])
+                if weighted_selection(alpop_cost, pop[i]['Cost'],w[i,:],RP) == 1:
                     pop[i]['Position'] = alpop
-                    pop[i]['Cost'] = alpop_cost
-                elif check_domination(alpop_cost, pop[i]['Cost']) == 0:
-                    Extra_archive.append({'Position': alpop, 'Cost': alpop_cost})
+                    pop[i]['Cost'] = alpop_cost 
                 else:
                     L[i] += 1
-                    continue
-                
-    # %% ------------------------- SELECTION LOOP --------------------------
-        w = np.array([0.5, 0.5])
-        E = np.array([np.sum(p['Cost'].flatten() * w) for p in pop])
-        if np.sum(E) == 0:
-            E_ave = np.ones_like(E) / nPop
-        else:
-            E_ave = E / np.sum(E)
-            
+                    #continue
+           
     # %% ------------------------- EXPLOITATION LOOP --------------------------
-        for _ in range(nPop):
-            i = np.random.choice(nPop, p=E_ave)
-            for k in range(N):
+        #print("Exploitation starts")    
+        for i in range(nPop):
+            arr = np.arange(1, N) 
+            np.random.shuffle(arr) 
+            for j in range(1,N-1):
+                k = arr[j]
                 alpop = pop[i]['Position'].copy()
                 h = np.random.randint(N)
                 phi = a * np.random.uniform(-1, 1, (1, 2)) * (1 - L[i] / MaxIt)**2
@@ -88,25 +90,14 @@ for Trial in range(10):
     
                 if Connectivity_graph(Graph(alpop[:, :2], rc),[]):
                     alpop_cost = CostFunction_MOO(alpop, stat, Obstacle_Area, Covered_Area.copy())
-                    if check_domination(alpop_cost, pop[i]['Cost']) == 1:
+                    RP[:,0] = np.minimum(RP[:,0], alpop_cost[:,0])
+                    RP[:,1] = np.maximum(RP[:,1], alpop_cost[:,0])
+                    if weighted_selection(alpop_cost, pop[i]['Cost'], w[i,:],RP) == 1:
                         pop[i]['Position'] = alpop
                         pop[i]['Cost'] = alpop_cost
                         break
-                    elif check_domination(alpop_cost, pop[i]['Cost']) == 0:
-                        Extra_archive.append({'Position': alpop, 'Cost': alpop_cost})
-                        break
-                    else:
-                        L[i] += 1
-                        continue
-    
-        pop = pop + Extra_archive
-        pop, F = NS_Sort(pop)
-        pop = CD_calc(pop, F)
-        pop, F = sort_pop(pop)
-        pop = pop[:nPop]
-        
-        Extra_archive = []
-        
+            #print(f"Exploitation changing of pop {i}, node {k} ")
+            
         print(f"Iter={it}, Trial = {Trial}, {len(get_pareto_front(pop))} non-dominated solutions")
     
         
@@ -121,19 +112,26 @@ for Trial in range(10):
         
         # # Vẽ Pareto front
         # plt.plot(data_set[:, 0], data_set[:, 1], 'o', color='g')
-        # plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'PF')
-        # #plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSABC2')
-        # #plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSABC3')
-        # #plt.text(data[:, 0], data[:, 1], range(0,len(Extra_archive)), fontsize=15, color='red')
-        # #plt.legend()
+        # plt.plot(data[:, 0], data[:, 1], 'o', color='b', label = 'NSABC')
+        # #plt.plot(data2[:, 0], data2[:, 1], 'o', color='r', label = 'NSWABC')
+        # #plt.plot(data3[:, 0], data3[:, 1], 'o', color='g', label = 'NSWABC')
+        # # for i in range(len(data_set)):
+        # #     x, y = data_set[i]
+        # #     plt.text(x, y, str(i), fontsize=8, ha='right', va='bottom', color='blue')
+        # plt.legend()
+        # # plt.xlim(RP[0,0], RP[0,1])
+        # # plt.ylim(RP[1,0], RP[1,1])
         # plt.xlabel('Non-coverage')
         # plt.ylabel('Energy')
         # None
         # # Cập nhật đồ thị theo từng iteration
-        # plt.pause(0.01)
+        # plt.pause(0.001)
     
     # %% ------------------------- DELETE --------------------------    
-    del alpop, alpop_cost, cov, E, E_ave, h, i, k, phi, size
+    del alpop, alpop_cost, h, i, k, phi, size
     folder_name = 'data'
-    file_name = f'NSABC_{Trial}.mat'
+    file_name = f'DWABC_{Trial}.mat'
     save_mat(folder_name, file_name,pop,stat,MaxIt)
+    
+    
+    
